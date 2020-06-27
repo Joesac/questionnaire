@@ -1,0 +1,21 @@
+.completed-text {
+    color: var(--ion-color-primary);
+    font-size: 13px;
+}
+
+.dpt-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.department-label {
+    display: flex;
+}
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+ion-item {
+    --padding-start: 0;
+}

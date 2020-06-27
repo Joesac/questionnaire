@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/departments"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ selectedDepartment?.name }} Questionnaire</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="middlize-container" *ngIf="isLoading">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <p *ngIf="!isLoading">
+    {{ questionIterator + 1 }}. {{ currentQuestion?.question }}
+  </p>
+
+  <!-- Show text area if isTypable -->
+  <ion-item *ngIf="currentQuestion?.isTypable && !isLoading">
+    <ion-textarea #textArea></ion-textarea>
+  </ion-item>
+
+  <ion-list lines="none" *ngIf="!isLoading">
+    <ion-radio-group [(ngModel)]="selectedOption">
+      <ion-item *ngFor="let option of currentQuestion?.options">
+        <ion-label>{{ option?.label }}</ion-label>
+        <ion-radio slot="start" value="{{option?.value}}" (ionFocus)="onOptionSelected($event)"></ion-radio>
+      </ion-item>
+    </ion-radio-group>
+  </ion-list>
+
+  <ion-grid *ngIf="!isLoading">
+    <ion-row>
+      <ion-col class="ion-text-right">
+        <ion-button (click)="onShowPreviousQuestion()">
+          <ion-icon name="arrow-back-outline"></ion-icon>
+        </ion-button>
+      </ion-col>
+      <ion-col>
+
+        <ion-button (click)="onShowNextQuestion()" *ngIf="questionIterator < loadedQuestions?.length - 1">
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="onCompleteDepartmentQuestionnaire(selectedDepartment)" *ngIf="questionIterator >= loadedQuestions?.length - 1">
+          <ion-icon name="checkmark-outline"></ion-icon>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

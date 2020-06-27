@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Departments</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="middlize-container" *ngIf="isLoading">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <div class="middlize-container" *ngIf="!isLoading && !loadedDepartments.length">
+      <ion-label class="ion-text-center">
+        <h2>No Department(s) available right now.</h2>
+        <h2>Please come back later</h2>
+      </ion-label>
+  </div>
+
+  <div *ngIf="!isLoading && loadedDepartments.length">
+    <h3 class="ion-text-center">ABSH REQUESTS YOUR HELP</h3>
+    <p>Please take a moment to help us improve your experience at our facility by completing the following customer satisfaction survey.</p>
+    <p>Please select the circle corresponding to your response. If you change your mind, just select a different option.</p>
+  </div>
+
+  <ion-list *ngIf="!isLoading && loadedDepartments.length">
+    <ion-item *ngFor="let department of loadedDepartments" (click)="navigateToQuestions(department.id)" class="ion-activatable dpt-item">
+      <ion-ripple-effect></ion-ripple-effect>
+      <ion-label class="department-label">
+        <span>{{ department.name }}</span>
+        <span class="spacer"></span>
+        <span class="completed-text" *ngIf="department.isComplete">Completed</span>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>
