@@ -7,13 +7,7 @@ import { IDepartment } from '../models/department.model';
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {
-    private departments = new BehaviorSubject<IDepartment[]>([
-        { id: 'd1', name: 'Pharmacy', isComplete: false },
-        { id: 'd2', name: 'Front Desk', isComplete: false },
-        { id: 'd3', name: 'Consulting Room', isComplete: false },
-        { id: 'd4', name: 'Nurses', isComplete: false },
-        { id: 'd5', name: 'Laboratory', isComplete: false }
-    ]);
+    private departments = new BehaviorSubject<IDepartment[]>([]);
 
     constructor(
         private httpClient: HttpClient
@@ -38,10 +32,10 @@ export class DepartmentService {
                     }
                 }
                 return depts;
+            }),
+            tap((departments) => {
+                this.departments.next(departments);
             })
-            // tap((departments) => {
-            //     this.departments.next(departments);
-            // })
         );
     }
 
@@ -53,9 +47,9 @@ export class DepartmentService {
     }
 
     setDepartments(departments: IDepartment[]) {
-        return this.getDepartments().pipe(take(1), tap(() => {
+        this.getDepartments().pipe(take(1), tap(() => {
             this.departments.next(departments);
-        }));
+        })).subscribe();
     }
 
     setDepartmentToComplete(department: IDepartment) {

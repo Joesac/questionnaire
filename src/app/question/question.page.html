@@ -13,25 +13,33 @@
     <ion-spinner color="primary"></ion-spinner>
   </div>
 
-  <p *ngIf="!isLoading">
+  <div class="middlize-container" *ngIf="!loadedQuestions.length && !isLoading">
+    <div class="whole-page-info ion-text-center">
+      <p>No questions under this department</p>
+      <ion-button routerLink="/departments">Back to departments</ion-button>
+    </div>
+  </div>
+  
+
+  <p *ngIf="!isLoading && loadedQuestions.length">
     {{ questionIterator + 1 }}. {{ currentQuestion?.question }}
   </p>
 
   <!-- Show text area if isTypable -->
-  <ion-item *ngIf="currentQuestion?.isTypable && !isLoading">
-    <ion-textarea #textArea></ion-textarea>
+  <ion-item *ngIf="currentQuestion?.isTypable && !isLoading && loadedQuestions.length">
+    <ion-textarea auto-grow="true" #textArea></ion-textarea>
   </ion-item>
 
-  <ion-list lines="none" *ngIf="!isLoading">
+  <ion-list lines="none" *ngIf="!isLoading && loadedQuestions.length">
     <ion-radio-group [(ngModel)]="selectedOption">
       <ion-item *ngFor="let option of currentQuestion?.options">
         <ion-label>{{ option?.label }}</ion-label>
-        <ion-radio slot="start" value="{{option?.value}}" (ionFocus)="onOptionSelected($event)"></ion-radio>
+        <ion-radio slot="start" value="{{option?.value}}`{{option?.label}}" (ionFocus)="onOptionSelected($event)"></ion-radio>
       </ion-item>
     </ion-radio-group>
   </ion-list>
 
-  <ion-grid *ngIf="!isLoading">
+  <ion-grid *ngIf="!isLoading && loadedQuestions.length">
     <ion-row>
       <ion-col class="ion-text-right">
         <ion-button (click)="onShowPreviousQuestion()">

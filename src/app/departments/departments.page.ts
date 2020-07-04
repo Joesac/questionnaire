@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, AlertController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 
 import { IDepartment } from '../models/department.model';
@@ -15,6 +15,7 @@ import { StorageService } from '../services/storage.service';
 })
 export class DepartmentsPage implements OnInit, OnDestroy {
   isLoading = false;
+  isError = false;
   loadedDepartments: IDepartment[];
 
   loadedDepartmentsSubs = new Subscription();
@@ -26,9 +27,31 @@ export class DepartmentsPage implements OnInit, OnDestroy {
     private utilService: UtilService,
     private storageService: StorageService,
     private loadingCtrler: LoadingController,
+    private alertController: AlertController
   ) { }
 
   ngOnInit() {
+    this.isLoading = true;
+    this.onFetchDepartments();
+  }
+
+  navigateToQuestions(departmentID: string) {
+    if (!this.loadedDepartments.find((depts) => depts.id === departmentID).isComplete) {
+      this.router.navigateByUrl(`/departments/${departmentID}`);
+    } else {
+      this.selectedDepartmentSub = this.departmentService
+        .getDepartment(departmentID)
+        .subscribe((dept) => {
+          this.utilService.showAlertMessage(
+            'Completed',
+            `Please you have completed the questionnaire for our ${dept.name} department`,
+            ['ok']
+          );
+        });
+    }
+  }
+
+  onFetchDepartments() {
     this.isLoading = true;
     this.storageService.retrieveItem('departments').then((value) => {
       const stringifiedValue = value.value;
@@ -47,32 +70,24 @@ export class DepartmentsPage implements OnInit, OnDestroy {
           }
         }
 
-        this.departmentService.setDepartments(fetchedDepts).subscribe();
+        this.departmentService.setDepartments(fetchedDepts);
         this.loadedDepartments = fetchedDepts;
         this.storageService.saveItem('departments', fetchedDepts).then(() => {
           this.isLoading = false;
+          this.isError = false;
+        });
+      }, err => {
+        this.isError = true;
+        this.isLoading = false;
+        this.alertController.create({
+          header: 'Error',
+          message: 'There was an error getting departments. Please check your internet connection and try again.',
+          buttons: ['okay']
+        }).then(alertEl => {
+          alertEl.present();
         });
       });
     });
-  }
-
-  navigateToQuestions(departmentID: string) {
-    // let lCtrler;
-    // let canNavigate = false;
-
-    if (!this.loadedDepartments.find((depts) => depts.id === departmentID).isComplete) {
-      this.router.navigateByUrl(`/departments/${departmentID}`);
-    } else {
-      this.selectedDepartmentSub = this.departmentService
-        .getDepartment(departmentID)
-        .subscribe((dept) => {
-          this.utilService.showAlertMessage(
-            'Completed',
-            `Please you have completed the questionnaire for our ${dept.name} department`,
-            ['ok']
-          );
-        });
-    }
   }
 
   ngOnDestroy() {

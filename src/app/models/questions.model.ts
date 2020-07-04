@@ -3,6 +3,7 @@ export interface IQuestion {
     departmentId: string;
     question: string;
     selectedOption: string;
+    selectedOptionLabel: string;
     options: any;
     isTypable: boolean;
     typableText: string;

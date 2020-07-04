@@ -4,80 +4,23 @@ import { tap, take, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 
 import { IQuestion } from '../models/questions.model';
-import { IAnswer } from '../models/answer.model';
+
+interface IAnswerObj {
+    departmentId: string;
+    answers: string;
+}
+
+interface AvailableOptions {
+    label: string;
+    value: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class QuestionService {
-    private questions = new BehaviorSubject<IQuestion[]>([
-        // {
-        //     id: 'q1',
-        //     departmentId: 'd1',
-        //     question: 'Was the lab attendant compassionate and helpful?',
-        //     selectedOption: 'q1',
-        //     options: [
-        //         { label: 'option1', value: 'A', isChecked: false },
-        //         { label: 'option2', value: 'B', isChecked: false },
-        //         { label: 'option3', value: 'C', isChecked: false },
-        //         { label: 'option4', value: 'd', isChecked: false },
-        //     ],
-        //     isTypable: false,
-        //     typableText: ''
-        // },
-        // {
-        //     id: 'q2',
-        //     departmentId: 'd1',
-        //     question: 'This is question 2',
-        //     selectedOption: 'q2',
-        //     options: [
-        //         { label: 'option1', value: 'A', isChecked: false },
-        //         { label: 'option2', value: 'B', isChecked: false },
-        //         { label: 'option3', value: 'C', isChecked: false },
-        //         { label: 'option4', value: 'd', isChecked: false },
-        //     ],
-        //     isTypable: false,
-        //     typableText: ''
-        // },
-        // {
-        //     id: 'q3',
-        //     departmentId: 'd1',
-        //     question: 'This is question 3',
-        //     selectedOption: 'q2',
-        //     options: [
-        //         { label: 'option1', value: 'A', isChecked: false },
-        //         { label: 'option2', value: 'B', isChecked: false },
-        //         { label: 'option3', value: 'C', isChecked: false },
-        //         { label: 'option4', value: 'd', isChecked: false },
-        //     ],
-        //     isTypable: false,
-        //     typableText: ''
-        // },
-        // {
-        //     id: 'q4',
-        //     departmentId: 'd1',
-        //     question: 'This is question 4',
-        //     selectedOption: 'q4',
-        //     options: [
-        //         { label: 'option1', value: 'A', isChecked: false },
-        //         { label: 'option2', value: 'B', isChecked: false },
-        //         { label: 'option3', value: 'C', isChecked: false },
-        //         { label: 'option4', value: 'd', isChecked: false },
-        //     ],
-        //     isTypable: false,
-        //     typableText: ''
-        // },
-        // {
-        //     id: 'q5',
-        //     departmentId: 'd1',
-        //     question: 'This is question 5',
-        //     selectedOption: 'q5',
-        //     options: [],
-        //     isTypable: true,
-        //     typableText: ''
-        // }
-    ]);
+    private questions = new BehaviorSubject<IQuestion[]>([]);
 
     private currentQuestion: IQuestion;
-    private answers = {} as IAnswer;
+    private answer = {} as IAnswerObj;
     questionIterator = -1;
 
     constructor(private httpClient: HttpClient) { }
@@ -102,6 +45,7 @@ export class QuestionService {
                             departmentId: fetchedQuestions[key].departmentId,
                             question: fetchedQuestions[key].question,
                             selectedOption: key,
+                            selectedOptionLabel: key,
                             isTypable: fetchedQuestions[key].isTypable,
                             typableText: fetchedQuestions[key].typableText,
                             options: []
@@ -133,48 +77,59 @@ export class QuestionService {
         );
     }
 
-    // renderPreviousQuestion() {
-    //     this.questionIterator--;
+    accumulateAnswers(question: IQuestion[]): IAnswerObj {
+        let obj = '';
+        let selOption = '';
+        let selLabel = '';
+        let stringifiedOptions = '';
 
-    //     if (this.questionIterator < 0) {
-    //         this.questionIterator = 0;
-    //     }
-
-    //     this.currentQuestion = this.questions[this.questionIterator];
-    //     return this.currentQuestion;
-    // }
-
-    // renderNextQuestion() {
-    //     this.questionIterator++;
-    //     return this.getQuestions().pipe(
-    //         take(1),
-    //         map(quests => {
-    //             if (this.questionIterator > quests.length) {
-    //                 return undefined;
-    //             }
-
-    //             this.currentQuestion = quests[this.questionIterator];
-    //             return this.currentQuestion;
-    //         })
-    //     );
-    // }
-
-    accumulateAnswers(question: IQuestion[]): IAnswer {
         for (const i of question) {
-            this.answers[`${i.id}`] = {
-                opinion: i.typableText,
-                quesId: i.id,
-                selectedOption: i.selectedOption,
-                isTypable: i.isTypable
-            };
+            if (i.selectedOption.toString().split('`').length === 2) {
+                selOption = this.separateSelectedValue(i.selectedOption.toString(), 0);
+                selLabel = this.separateSelectedValue(i.selectedOption.toString(), 1);
+            } else {
+                selOption = i.selectedOption;
+                selLabel = i.selectedOptionLabel;
+            }
+            stringifiedOptions = this.stringifyAvailableOptons(i.options);
+
+            obj +=
+            `{"availableOptions":"${stringifiedOptions}","opinion":"${i.typableText}","quesId":"${i.id}","selectedOption":"${selOption}","selectedOptionLabel":"${selLabel}","isTypable":"${i.isTypable}","departmentId":"${i.departmentId}"},`;
         }
-        return this.answers;
+
+        let arrayLisedObj = '[';
+        arrayLisedObj += obj.substring(0, obj.length - 1);
+        arrayLisedObj += ']';
+        // arrayLisedObj = arrayLisedObj.replace(/(\n|\r|\s)/gi, '');
+        console.log(JSON.parse(arrayLisedObj));
+        this.answer = {
+            departmentId: question[0].departmentId,
+            answers: arrayLisedObj
+        };
+        return this.answer;
     }
 
-    completeQuestions(questions: IAnswer) {
+    completeQuestions(questions: IAnswerObj) {
         return this.httpClient.post('https://absh-questionnaire.firebaseio.com/answered-questions.json', { ...questions })
             .pipe(tap(resData => {
                 return resData;
             }));
+    }
+
+    private stringifyAvailableOptons(options: AvailableOptions[]) {
+        if (!options.length) {
+            return '[]';
+        }
+
+        let stringifiedOptions = '[';
+        for (const option of options) {
+            stringifiedOptions += `{'label':'${option.label}','option':'${option.value}'},`;
+        }
+        stringifiedOptions = stringifiedOptions.substring(0, stringifiedOptions.length - 1);
+        return stringifiedOptions += ']';
+    }
+
+    private separateSelectedValue(val: string, partToTake: number) {
+        return val?.split('`')[partToTake];
     }
 }

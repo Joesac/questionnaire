@@ -20,16 +20,22 @@ export class QuestionPage implements OnInit, OnDestroy {
   @ViewChild('textArea', { static: false }) publicTextArea: IonTextarea;
 
   isLoading = false;
+  isError = false;
   loadedQuestions: IQuestion[];
   currentQuestion: IQuestion;
   selectedDepartment: IDepartment;
   departmentID: string;
   selectedOption: string;
+  selectedOptionLabel: string;
   questionIterator = 0;
 
   selectedDepartmentSubs = new Subscription();
   completeDeptSubs = new Subscription();
   questionIitializationSubs = new Subscription();
+  fetchedQuestsSubs = new Subscription();
+  getQuestionsSubs = new Subscription();
+  completeQuestsSubs = new Subscription();
+  getDeptsSubs = new Subscription();
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -53,13 +59,45 @@ export class QuestionPage implements OnInit, OnDestroy {
 
       this.departmentID = pMap.get('departmentId');
 
-      this.questionService.getQuestions().subscribe(q => {
+      this.departmentService.getDepartments().subscribe(d => {
+        if (!d.length) {
+          this.departmentService.fetchDepartments().subscribe(() => {
+            this.departmentService.getDepartment(this.departmentID).subscribe(sd => {
+              this.selectedDepartment = sd;
+            });
+          }, err => {
+            this.alertController.create({
+              header: 'Error',
+              message: 'There was an error getting Questions. Please check your internet connection and try again.',
+              buttons: [{
+                text: 'okay', handler: () => {
+                  this.router.navigateByUrl('/departments');
+                }
+              }]
+            }).then(alertEl => {
+              alertEl.present();
+            });
+          });
+        }
+      });
+
+      this.getQuestionsSubs = this.questionService.getQuestions().subscribe(q => {
         this.loadedQuestions = q;
       });
 
-      this.questionService.fetchQuestion(this.departmentID).subscribe(() => {
+      this.fetchedQuestsSubs = this.questionService.fetchQuestion(this.departmentID).subscribe(() => {
         this.isLoading = false;
         this.onShowNextQuestion();
+      }, err => {
+        this.alertController.create({
+          header: 'Error!',
+          message: 'There was an error getting Questions. Please check your internet connection and try again.',
+          buttons: [{
+            text: 'okay', handler: () => {
+              this.router.navigateByUrl('/departments');
+            }
+          }]
+        });
       });
 
       this.selectedDepartmentSubs = this.departmentService.getDepartment(this.departmentID).subscribe(dept => {
@@ -97,13 +135,15 @@ export class QuestionPage implements OnInit, OnDestroy {
 
     this.questionIterator = this.questionService.questionIterator;
     this.selectedOption = this.loadedQuestions[this.questionIterator].selectedOption;
+    this.selectedOptionLabel = this.loadedQuestions[this.questionIterator].selectedOptionLabel;
     this.currentQuestion = this.loadedQuestions[this.questionIterator];
   }
 
   onShowNextQuestion() {
     this.questionService.questionIterator++;
     this.questionIterator = this.questionService.questionIterator;
-    this.selectedOption = this.loadedQuestions[this.questionIterator].selectedOption;
+    this.selectedOption = this.loadedQuestions[this.questionIterator]?.selectedOption;
+    this.selectedOptionLabel = this.loadedQuestions[this.questionIterator]?.selectedOptionLabel;
     this.currentQuestion = this.loadedQuestions[this.questionIterator];
   }
 
@@ -116,19 +156,20 @@ export class QuestionPage implements OnInit, OnDestroy {
     }
 
     const answers = this.questionService.accumulateAnswers(this.loadedQuestions);
+
     this.loadingCtrl.create({ message: 'Submitting...' })
       .then(loader => {
         loader.present();
 
-        this.questionService.completeQuestions(answers).subscribe(() => {
+        this.completeQuestsSubs = this.questionService.completeQuestions(answers).subscribe(() => {
 
           // Set department to complete
           this.completeDeptSubs = this.departmentService.setDepartmentToComplete(this.selectedDepartment).subscribe();
-          this.departmentService.getDepartments().subscribe(depts => {
+          this.getDeptsSubs = this.departmentService.getDepartments().subscribe(depts => {
             this.storageService.saveItem('departments', depts);
           });
 
-          loader.remove();
+          loader.dismiss();
           // this.questionService.initializeQuestions();
           this.router.navigateByUrl('/departments');
 
@@ -143,7 +184,7 @@ export class QuestionPage implements OnInit, OnDestroy {
           this.utilService.showAlertMessage(
             'Error!',
             'There was an error submitting your answers. Please try again',
-            ['ok']
+            ['okay']
           );
         });
       });
@@ -164,6 +205,22 @@ export class QuestionPage implements OnInit, OnDestroy {
 
     if (this.questionIitializationSubs) {
       this.questionIitializationSubs.unsubscribe();
+    }
+
+    if (this.fetchedQuestsSubs) {
+      this.fetchedQuestsSubs.unsubscribe();
+    }
+
+    if (this.getQuestionsSubs) {
+      this.getQuestionsSubs.unsubscribe();
+    }
+
+    if (this.completeQuestsSubs) {
+      this.completeQuestsSubs.unsubscribe();
+    }
+
+    if (this.getDeptsSubs) {
+      this.getDeptsSubs.unsubscribe();
     }
   }
 

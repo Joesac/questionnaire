@@ -19,3 +19,12 @@
 ion-item {
     --padding-start: 0;
 }
+
+ion-card {
+    background-image: linear-gradient(to bottom right, var(--ion-color-primary), #72d6a7);
+    color: white;
+}
+
+ion-card-title {
+    color: white;
+}
