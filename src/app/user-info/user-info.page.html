@@ -1,0 +1,76 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Home</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding-horizontal">
+  <ion-slides #slidesContainer pager="true" [options]="slideOpts"
+    (ionSlideDidChange)="onIonSlideChange(slidesContainer)">
+    <ion-slide>
+      <ion-grid>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <ion-icon color="primary" name="help-outline"></ion-icon>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <h2>ABSH REQUESTS YOUR HELP</h2>
+            <p>Please take a moment to help us improve your experience at our facility by completing the following
+              customer satisfaction survey.</p>
+            <p>Please select the option corresponding to your response. If you change your mind, just select a different
+              option.</p>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <ion-button class="ion-margin-top" (click)="onSlideToNext()">Begin</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-slide>
+
+    <ion-slide>
+      <ion-grid>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <h3>How old are you?</h3>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <ion-radio-group [(ngModel)]="selectedAge">
+              <ion-item *ngFor="let age of ageGroups">
+                <ion-label>{{ age?.age }}</ion-label>
+                <ion-radio slot="start" value="{{age?.age}}"></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+            <ion-button class="ion-margin-top" (click)="onSlideToNext()">Next</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-slide>
+
+    <ion-slide>
+      <ion-grid>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <h3>What is your gender?</h3>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col offsetLg="3" sizeLg="6">
+            <ion-radio-group [(ngModel)]="selectedGender">
+              <ion-item *ngFor="let g of gender">
+                <ion-label>{{ g?.desc }}</ion-label>
+                <ion-radio slot="start" value="{{g?.desc}}"></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+            <ion-button class="ion-margin-top" (click)="onComplePersonalInfo()">Next</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-slide>
+  </ion-slides>
+</ion-content>

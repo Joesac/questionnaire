@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Home</ion-title>
+    <ion-title>Departments</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -12,8 +12,9 @@
   
   <div class="middlize-container" *ngIf="isError && !isLoading">
     <div class="whole-page-info ion-text-center">
-      <p>There was an error fetching departments.</p>
-      <ion-button (click)="onFetchDepartments()">Try again</ion-button>
+      <h2>Something went wrong</h2>
+      <p>A system error or your internet connection might be preventing this page from displaying</p>
+      <ion-button (click)="onReload()">Try Again</ion-button>
     </div>
   </div>
 
@@ -24,27 +25,22 @@
       </ion-label>
   </div>
 
-  <div *ngIf="!isLoading && loadedDepartments?.length && !isError">
-    <ion-card class="ion-margin-vertical ion-no-margin">
-      <ion-card-header>
-        <ion-card-title class="ion-text-center">ABSH REQUESTS YOUR HELP</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Please take a moment to help us improve your experience at our facility by completing the following customer satisfaction survey.</p>
-        <p>Please select the circle corresponding to your response. If you change your mind, just select a different option.</p>
-        <p class="ion-padding-top">Click on a department to begin</p>
-      </ion-card-content>
-    </ion-card>
-  </div>
+  <ion-grid>
+    <ion-row>
+      <ion-col offsetLg="3" sizeLg="6">
+        <ion-list *ngIf="!isLoading && loadedDepartments?.length && !isError">
+          <ion-list-header class="ion-no-padding"><h2>Departments</h2></ion-list-header>
+          <ion-item button *ngFor="let department of loadedDepartments; let i = index;" (click)="navigateToQuestions(department.id)" class="dpt-item">
+            <div class="custome-avatar"> {{i + 1}} </div>
+            <ion-label class="department-label custome-label">
+              <span>{{ department.name }}</span>
+              <span class="spacer"></span>
+              <span class="completed-text" *ngIf="department.isComplete">Completed</span>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
-  <ion-list *ngIf="!isLoading && loadedDepartments?.length && !isError">
-    <ion-list-header class="ion-no-padding"><h4>Department(s)</h4></ion-list-header>
-    <ion-item button *ngFor="let department of loadedDepartments" (click)="navigateToQuestions(department.id)" class="dpt-item">
-      <ion-label class="department-label">
-        <span>{{ department.name }}</span>
-        <span class="spacer"></span>
-        <span class="completed-text" *ngIf="department.isComplete">Completed</span>
-      </ion-label>
-    </ion-item>
-  </ion-list>
 </ion-content>

@@ -23,8 +23,16 @@ ion-item {
 ion-card {
     background-image: linear-gradient(to bottom right, var(--ion-color-primary), #72d6a7);
     color: white;
+
+    ion-card-content p {
+        font-size: 1rem;
+    }
 }
 
 ion-card-title {
     color: white;
+}
+
+ion-col {
+    --ion-grid-column-padding: 0;
 }

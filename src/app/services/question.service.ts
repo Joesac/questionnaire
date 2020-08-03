@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap, take, map } from 'rxjs/operators';
-import { BehaviorSubject } from 'rxjs';
+import { tap, take, map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, of } from 'rxjs';
 
 import { IQuestion } from '../models/questions.model';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
+import { UtilService } from './util.services';
+import { StorageService } from './storage.service';
 
 interface IAnswerObj {
     departmentId: string;
-    answers: string;
+    answers: IQuestion[];
+    userInfo: string;
 }
 
 interface AvailableOptions {
@@ -23,7 +28,12 @@ export class QuestionService {
     private answer = {} as IAnswerObj;
     questionIterator = -1;
 
-    constructor(private httpClient: HttpClient) { }
+    constructor(
+        private httpClient: HttpClient,
+        private authService: AuthService,
+        private utilService: UtilService,
+        private storageService: StorageService
+    ) { }
 
     initializeIterator() {
         this.questionIterator = -1;
@@ -35,9 +45,14 @@ export class QuestionService {
 
     fetchQuestion(departmentId: string) {
         const questions = [];
-        return this.httpClient.get<IQuestion>(`https://absh-questionnaire.firebaseio.com/questions.json?orderBy="departmentId"&equalTo="${departmentId}"`).pipe(
+        return this.authService.token.pipe(
+            take(1),
+            switchMap(token => {
+                return this.httpClient.get<IQuestion>(`${environment.databaseURL}/questions.json?orderBy="departmentId"&equalTo="${departmentId}"&auth=${token}`);
+            }),
             take(1),
             map(fetchedQuestions => {
+
                 for (const key in fetchedQuestions) {
                     if (fetchedQuestions.hasOwnProperty(key)) {
                         const eachQuestion = {
@@ -48,6 +63,7 @@ export class QuestionService {
                             selectedOptionLabel: key,
                             isTypable: fetchedQuestions[key].isTypable,
                             typableText: fetchedQuestions[key].typableText,
+                            multipleSelection: fetchedQuestions[key].multipleSelection,
                             options: []
                         } as IQuestion;
 
@@ -69,7 +85,13 @@ export class QuestionService {
                         questions.push(eachQuestion);
                     }
                 }
-                return questions;
+                return questions.sort((a, b) => {
+                    if (a.isTypable < b.isTypable) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
             }),
             tap((quests) => {
                 this.questions.next(quests);
@@ -77,56 +99,80 @@ export class QuestionService {
         );
     }
 
-    accumulateAnswers(question: IQuestion[]): IAnswerObj {
-        let obj = '';
+    isAtLeastAResposponseGiven(answer: IAnswerObj): boolean {
+        const availableOptions = ['A', 'B', 'C', 'D', 'E'];
+        let isActedOn = false;
+
+        for (const iterator of answer.answers) {
+            if (!iterator.isTypable) {
+                if (!iterator.multipleSelection) {
+                    isActedOn = availableOptions.includes(iterator.selectedOption);
+                } else {
+                    for (const j of iterator.options) {
+                        if (j.isChecked) {
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                isActedOn = !!iterator.typableText.length;
+            }
+
+            if (isActedOn) {
+                return isActedOn;
+            }
+        }
+        return isActedOn;
+    }
+
+    accumulateAnswers(questions: IQuestion[], userInfo: string): IAnswerObj {
         let selOption = '';
         let selLabel = '';
-        let stringifiedOptions = '';
+        const ques = [];
+        const answerToBeSentToServer = {};
 
-        for (const i of question) {
-            if (i.selectedOption.toString().split('`').length === 2) {
-                selOption = this.separateSelectedValue(i.selectedOption.toString(), 0);
-                selLabel = this.separateSelectedValue(i.selectedOption.toString(), 1);
-            } else {
-                selOption = i.selectedOption;
-                selLabel = i.selectedOptionLabel;
-            }
-            stringifiedOptions = this.stringifyAvailableOptons(i.options);
+        for (let i = 0; i < questions.length; i++) {
+            const question = questions[i];
+            // if (question.selectedOption.toString().split('`').length === 2) {
+            //     selOption = this.separateSelectedValue(question.selectedOption.toString(), 0);
+            //     selLabel = this.separateSelectedValue(question.selectedOption.toString(), 1);
+            // } else {
+            selOption = question.selectedOption;
+            selLabel = question.selectedOptionLabel;
+            // }
 
-            obj +=
-            `{"availableOptions":"${stringifiedOptions}","opinion":"${i.typableText}","quesId":"${i.id}","selectedOption":"${selOption}","selectedOptionLabel":"${selLabel}","isTypable":"${i.isTypable}","departmentId":"${i.departmentId}"},`;
+            questions[i].selectedOption = selOption;
+            questions[i].selectedOptionLabel = selLabel;
+            questions[i].id = question.id;
+            questions[i].departmentId = question.departmentId;
+            questions[i].isTypable = question.isTypable;
+            questions[i].typableText = question.typableText;
+            questions[i].options = question.options;
+
+            ques.push(questions[i]);
         }
 
-        let arrayLisedObj = '[';
-        arrayLisedObj += obj.substring(0, obj.length - 1);
-        arrayLisedObj += ']';
-        // arrayLisedObj = arrayLisedObj.replace(/(\n|\r|\s)/gi, '');
-        console.log(JSON.parse(arrayLisedObj));
+        // get the age and gender of the user
         this.answer = {
-            departmentId: question[0].departmentId,
-            answers: arrayLisedObj
+            departmentId: questions[0].departmentId,
+            answers: ques,
+            userInfo: JSON.parse(userInfo)
         };
+
         return this.answer;
     }
 
     completeQuestions(questions: IAnswerObj) {
-        return this.httpClient.post('https://absh-questionnaire.firebaseio.com/answered-questions.json', { ...questions })
-            .pipe(tap(resData => {
+        return this.authService.token.pipe(
+            take(1),
+            switchMap(token => {
+                return this.httpClient.post(`${environment.databaseURL}/answered-questions.json?auth=${token}`,
+                    { ...questions });
+            }),
+            take(1),
+            tap(resData => {
                 return resData;
             }));
-    }
-
-    private stringifyAvailableOptons(options: AvailableOptions[]) {
-        if (!options.length) {
-            return '[]';
-        }
-
-        let stringifiedOptions = '[';
-        for (const option of options) {
-            stringifiedOptions += `{'label':'${option.label}','option':'${option.value}'},`;
-        }
-        stringifiedOptions = stringifiedOptions.substring(0, stringifiedOptions.length - 1);
-        return stringifiedOptions += ']';
     }
 
     private separateSelectedValue(val: string, partToTake: number) {

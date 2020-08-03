@@ -13,47 +13,63 @@
     <ion-spinner color="primary"></ion-spinner>
   </div>
 
-  <div class="middlize-container" *ngIf="!loadedQuestions.length && !isLoading">
+  <div class="middlize-container" *ngIf="!loadedQuestions?.length && !isLoading">
     <div class="whole-page-info ion-text-center">
       <p>No questions under this department</p>
       <ion-button routerLink="/departments">Back to departments</ion-button>
     </div>
   </div>
-  
 
-  <p *ngIf="!isLoading && loadedQuestions.length">
-    {{ questionIterator + 1 }}. {{ currentQuestion?.question }}
-  </p>
-
-  <!-- Show text area if isTypable -->
-  <ion-item *ngIf="currentQuestion?.isTypable && !isLoading && loadedQuestions.length">
-    <ion-textarea auto-grow="true" #textArea></ion-textarea>
-  </ion-item>
-
-  <ion-list lines="none" *ngIf="!isLoading && loadedQuestions.length">
-    <ion-radio-group [(ngModel)]="selectedOption">
-      <ion-item *ngFor="let option of currentQuestion?.options">
-        <ion-label>{{ option?.label }}</ion-label>
-        <ion-radio slot="start" value="{{option?.value}}`{{option?.label}}" (ionFocus)="onOptionSelected($event)"></ion-radio>
-      </ion-item>
-    </ion-radio-group>
-  </ion-list>
-
-  <ion-grid *ngIf="!isLoading && loadedQuestions.length">
+  <ion-grid>
     <ion-row>
-      <ion-col class="ion-text-right">
-        <ion-button (click)="onShowPreviousQuestion()">
-          <ion-icon name="arrow-back-outline"></ion-icon>
-        </ion-button>
-      </ion-col>
-      <ion-col>
+      <ion-col offsetLg="3" sizeLg="6">
 
-        <ion-button (click)="onShowNextQuestion()" *ngIf="questionIterator < loadedQuestions?.length - 1">
-          <ion-icon name="arrow-forward-outline"></ion-icon>
-        </ion-button>
-        <ion-button color="danger" (click)="onCompleteDepartmentQuestionnaire(selectedDepartment)" *ngIf="questionIterator >= loadedQuestions?.length - 1">
-          <ion-icon name="checkmark-outline"></ion-icon>
-        </ion-button>
+        <p *ngIf="!isLoading && loadedQuestions?.length">
+          {{ questionIterator + 1 }}. {{ currentQuestion?.question }}
+        </p>
+
+        <!-- Show text area if isTypable -->
+        <ion-item *ngIf="currentQuestion?.isTypable && !isLoading && loadedQuestions?.length">
+          <ion-textarea rows="6" auto-grow="true" #textArea></ion-textarea>
+        </ion-item>
+
+        <ion-list lines="none" *ngIf="!isLoading && loadedQuestions?.length">
+          <ion-radio-group [(ngModel)]="selectedOption" *ngIf="!currentQuestion.multipleSelection">
+            <ion-item *ngFor="let option of currentQuestion?.options">
+              <ion-label>{{ option?.label }}</ion-label>
+              <ion-radio slot="start" value="{{option?.value}}" (ionFocus)="onOptionSelected($event)">
+              </ion-radio>
+            </ion-item>
+          </ion-radio-group>
+
+          <div *ngIf="currentQuestion.multipleSelection">
+            <ion-item *ngFor="let option of currentQuestion?.options">
+              <ion-label>{{ option.label }}</ion-label>
+              <ion-checkbox slot="start" [(ngModel)]="option.isChecked"></ion-checkbox>
+            </ion-item>
+          </div>
+
+        </ion-list>
+
+        <ion-grid *ngIf="!isLoading && loadedQuestions.length">
+          <ion-row>
+            <ion-col class="ion-text-right">
+              <ion-button (click)="onShowPreviousQuestion()">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+              </ion-button>
+            </ion-col>
+            <ion-col>
+
+              <ion-button (click)="onShowNextQuestion()" *ngIf="questionIterator < loadedQuestions?.length - 1">
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              </ion-button>
+              <ion-button #btnComplete color="danger" (click)="onCompleteDepartmentQuestionnaire()"
+                *ngIf="questionIterator >= loadedQuestions?.length - 1">
+                <ion-icon name="checkmark-outline"></ion-icon>
+              </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
       </ion-col>
     </ion-row>
   </ion-grid>

@@ -16,7 +16,7 @@
 @import "~@ionic/angular/css/normalize.css";
 @import "~@ionic/angular/css/structure.css";
 @import "~@ionic/angular/css/typography.css";
-@import '~@ionic/angular/css/display.css';
+@import "~@ionic/angular/css/display.css";
 
 /* Optional CSS utils that can be commented out */
 @import "~@ionic/angular/css/padding.css";
@@ -26,13 +26,39 @@
 @import "~@ionic/angular/css/flex-utils.css";
 
 .middlize-container {
-    height: 100%;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
+  height: 100%;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
 
-    .whole-page-info {
-        opacity: .6;
+  .whole-page-info {
+    p {
+      opacity: 0.6;
     }
+  }
+}
+
+.custome-avatar {
+  margin-right: 1rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #1dbf73b6;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: #1dbf7328;
+  font-size: 15px;
+}
+
+.custome-label {
+  margin-bottom: .5rem;
+  margin-top: .5rem;
+}
+
+ion-card {
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
 }

@@ -4,7 +4,8 @@ export interface IQuestion {
     question: string;
     selectedOption: string;
     selectedOptionLabel: string;
-    options: any;
+    options: {label: string; value: string; isChecked: boolean} [];
     isTypable: boolean;
     typableText: string;
+    multipleSelection: boolean;
 }

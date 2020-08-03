@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ABSH Feedback</string>
+    <string name="title_activity_main">ABSH Feedback</string>
+    <string name="package_name">com.absh.abshfeedback</string>
+    <string name="custom_url_scheme">com.absh.abshfeedback</string>
+</resources>

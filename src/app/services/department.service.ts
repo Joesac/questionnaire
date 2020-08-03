@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
-import { take, map, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { take, map, tap, switchMap } from 'rxjs/operators';
 
 import { IDepartment } from '../models/department.model';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {
     private departments = new BehaviorSubject<IDepartment[]>([]);
 
     constructor(
-        private httpClient: HttpClient
+        private httpClient: HttpClient,
+        private authService: AuthService
     ) { }
 
     getDepartments() {
@@ -19,7 +22,11 @@ export class DepartmentService {
 
     fetchDepartments() {
         const depts = [];
-        return this.httpClient.get<IDepartment>('https://absh-questionnaire.firebaseio.com/departments.json').pipe(
+        return this.authService.token.pipe(
+            take(1),
+            switchMap(token => {
+                return this.httpClient.get<IDepartment>(`${environment.databaseURL}/departments.json?auth=${token}`);
+            }),
             take(1),
             map(fetchedDepartments => {
                 for (const key in fetchedDepartments) {
@@ -60,5 +67,14 @@ export class DepartmentService {
                 completedDpt.isComplete = true;
                 this.departments.next(dept);
             }));
+    }
+
+    isAllDepartmentsComplete(depts: IDepartment[]) {
+        for (const d of depts) {
+            if (!d.isComplete) {
+                return false;
+            }
+        }
+        return true;
     }
 }

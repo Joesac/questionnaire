@@ -4,16 +4,8 @@
 
 export const environment = {
   production: false,
-  firebaseConfig: {
-    apiKey: 'AIzaSyD5RMyjqCKWfFuFgeEr8DIQnqwEK2ZHLaU',
-    authDomain: 'absh-questionnaire.firebaseapp.com',
-    databaseURL: 'https://absh-questionnaire.firebaseio.com',
-    projectId: 'absh-questionnaire',
-    storageBucket: 'absh-questionnaire.appspot.com',
-    messagingSenderId: '292507941362',
-    appId: '1:292507941362:web:b8057b1900aea6ff9e936b',
-    measurementId: 'G-0EEJN34564'
-  }
+  API_KEY: 'AIzaSyD5RMyjqCKWfFuFgeEr8DIQnqwEK2ZHLaU',
+  databaseURL: 'https://absh-questionnaire.firebaseio.com'
 };
 
 /*
